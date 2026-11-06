@@ -46,3 +46,6 @@ web/preview_*.png
 
 # 采集脚本的运行时产物
 failed_buildings.txt
+
+# 保存地图时自动生成的滚动备份（运行时产物，不入库）
+map_bak*.txt
