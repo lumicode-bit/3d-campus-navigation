@@ -40,3 +40,6 @@ desktop.ini
 map.txt.broken_by_exp_*
 screenshot_*.png
 web/preview_*.png
+
+# 基于旧基线的内部排查记录（数据与当前不符，不入库）
+问题对接清单_*.md
