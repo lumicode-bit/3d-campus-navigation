@@ -4,8 +4,15 @@
 覆盖校园 **76 栋建筑、677 个节点（76 个地点 + 601 个路网节点）、842 条道路**，
 支持最短路径、最少换乘、最小生成树与图遍历演示。
 
-![三维校园地图](docs/screenshots/map.png)
-![路线面板](docs/screenshots/route.png)
+**桌面版（C + OpenGL，真实运行截图）**
+
+![桌面版 3D 视图](docs/screenshots/desktop.png)
+
+<sub>桌面版截图取自 2026-10-25 构建（与仓库内 campus.exe 同版本）；此后地图数据有小幅更新。</sub>
+
+**网页版（与桌面版同一套数据）**
+
+![网页版：三维地图](docs/screenshots/map.png)
 ![最少换乘（BFS）](docs/screenshots/transfer.png)
 ![Prim 最小生成树](docs/screenshots/algo.png)
 
