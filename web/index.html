@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>师大瑶湖 · 校园导航</title>
+<style>
+:root{
+  --bg:#F1F2EF; --card:#FFFFFF; --line:#E3E5DF; --line2:#EEEFEA;
+  --txt:#1E221E; --dim:#666C64; --hint:#9AA096;
+  --accent:#2F6FED; --accent-soft:#E9F0FE; --accent-deep:#1E52C4;
+  --ok:#12A150; --bad:#DC2626; --warn:#C2751A;
+  --r:14px; --r2:10px;
+  --sh:0 1px 2px rgba(24,32,24,.06), 0 4px 14px rgba(24,32,24,.05);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
+  font:14px/1.45 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+button,input,select{font:inherit;color:inherit}
+button{border:0;background:none;cursor:pointer}
+
+.app{display:flex;flex-direction:column;height:100%;max-width:1280px;margin:0 auto;
+  background:var(--bg);box-shadow:0 0 0 1px var(--line2)}
+
+/* ---------- 顶栏 ---------- */
+.head{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--card);
+  border-bottom:1px solid var(--line);flex:0 0 auto}
+.brand{display:flex;align-items:center;gap:9px;min-width:0}
+.logo{width:28px;height:28px;border-radius:9px;background:var(--accent);flex:0 0 auto;
+  display:grid;place-items:center}
+.logo svg{width:16px;height:16px}
+.btitle{font-weight:500;font-size:15px;letter-spacing:.2px;white-space:nowrap}
+.bsub{font-size:11px;color:var(--hint);white-space:nowrap}
+.head .spacer{flex:1}
+.stat{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.pill{font-size:11px;color:var(--dim);background:var(--line2);border-radius:999px;
+  padding:3px 9px;white-space:nowrap}
+.pill b{font-weight:500;color:var(--txt)}
+
+/* ---------- 主体 ---------- */
+.main{flex:1;display:flex;min-height:0}
+.mapwrap{position:relative;flex:1;min-width:0;background:#FAFAF7;overflow:hidden}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+canvas.grabbing{cursor:grabbing}
+
+.tools{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:6px}
+.tool{width:34px;height:34px;border-radius:10px;background:var(--card);border:1px solid var(--line);
+  box-shadow:var(--sh);display:grid;place-items:center;color:var(--dim);transition:.14s}
+.tool:hover{color:var(--accent);border-color:#C9D9FA}
+.tool svg{width:16px;height:16px}
+
+.legend{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.92);
+  border:1px solid var(--line);border-radius:var(--r2);padding:8px 10px;font-size:11px;
+  color:var(--dim);box-shadow:var(--sh);display:flex;flex-direction:column;gap:5px;line-height:1}
+.lg{display:flex;align-items:center;gap:6px}
+.sw{width:14px;height:8px;border-radius:2px;flex:0 0 auto}
+
+.hintbar{position:absolute;left:50%;transform:translateX(-50%);top:12px;background:var(--accent);
+  color:#fff;font-size:12px;padding:6px 14px;border-radius:999px;box-shadow:var(--sh);
+  white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s}
+.hintbar.on{opacity:1}
+
+.popup{position:absolute;background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:0 6px 24px rgba(24,32,24,.14);padding:10px;min-width:172px;transform:translate(-50%,-100%);
+  margin-top:-10px;display:none}
+.popup.on{display:block}
+.popup .pn{font-weight:500;font-size:13px;margin-bottom:2px}
+.popup .pi{font-size:11px;color:var(--hint);margin-bottom:8px;font-family:ui-monospace,monospace}
+.popup .pr{display:flex;gap:6px}
+.popup .pr button{flex:1;font-size:12px;padding:6px 0;border-radius:8px;background:var(--accent-soft);
+  color:var(--accent-deep);font-weight:500}
+.popup .pr button:hover{background:#D7E4FD}
+
+/* ---------- 侧/下面板 ---------- */
+.sheet{width:352px;flex:0 0 auto;background:var(--card);border-left:1px solid var(--line);
+  overflow-y:auto;overflow-x:hidden;padding:12px 12px 16px;display:flex;flex-direction:column;gap:12px}
+.panel{display:none;flex-direction:column;gap:12px}
+.panel.on{display:flex}
+.card{border:1px solid var(--line);border-radius:var(--r);padding:11px 12px;background:var(--card)}
+.card>.ct{font-size:12px;color:var(--hint);margin-bottom:9px;font-weight:500;letter-spacing:.3px}
+.row{display:flex;align-items:center;gap:8px}
+.row+.row{margin-top:8px}
+.grow{flex:1;min-width:0}
+.ell{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.search{position:relative}
+.search input{width:100%;padding:9px 11px 9px 32px;border:1px solid var(--line);border-radius:var(--r2);
+  background:#FAFAF8;outline:none;transition:.14s}
+.search input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--accent-soft)}
+.search .ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--hint);
+  width:15px;height:15px;pointer-events:none}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;padding:5px 11px;border-radius:999px;background:var(--line2);color:var(--dim);
+  border:1px solid transparent;transition:.14s;white-space:nowrap}
+.chip:hover{background:#E7E9E3}
+.chip.on{background:var(--accent-soft);color:var(--accent-deep);border-color:#C9D9FA;font-weight:500}
+
+.seg{display:flex;background:var(--line2);border-radius:var(--r2);padding:3px;gap:3px}
+.seg button{flex:1;font-size:12.5px;padding:7px 0;border-radius:7px;color:var(--dim);transition:.14s}
+.seg button.on{background:var(--card);color:var(--accent-deep);font-weight:500;
+  box-shadow:0 1px 3px rgba(24,32,24,.1)}
+
+.btn{width:100%;padding:11px 0;border-radius:var(--r2);background:var(--accent);color:#fff;
+  font-weight:500;transition:.14s;text-align:center}
+.btn:hover{background:var(--accent-deep)}
+.btn:disabled{background:#C9CFC7;cursor:default}
+.btn.ghost{background:var(--line2);color:var(--dim)}
+.btn.ghost:hover{background:#E4E6E0;color:var(--txt)}
+.btn.sm{padding:8px 0;font-size:13px}
+
+.slot{display:flex;align-items:center;gap:9px;padding:9px 10px;border:1px solid var(--line);
+  border-radius:var(--r2);background:#FAFAF8;transition:.14s}
+.slot.pick{border-color:var(--accent);background:var(--accent-soft);cursor:pointer}
+.dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.dot.s{background:var(--ok)}
+.dot.e{background:var(--bad)}
+.slot .nm{font-size:13px;font-weight:500}
+.slot .nm.empty{font-weight:400;color:var(--hint)}
+.slot .x{margin-left:auto;color:var(--hint);width:18px;height:18px;display:grid;place-items:center;
+  border-radius:50%;flex:0 0 auto}
+.slot .x:hover{background:#ECEDE8;color:var(--txt)}
+.slot .x svg{width:11px;height:11px}
+
+.kv{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  font-size:12.5px;padding:4px 0}
+.kv+.kv{border-top:1px dashed var(--line2)}
+.kv .k{color:var(--dim)}
+.kv .v{font-weight:500;font-variant-numeric:tabular-nums;text-align:right}
+.kv .v.big{font-size:17px;color:var(--accent-deep)}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{background:#FAFAF8;border:1px solid var(--line);border-radius:var(--r2);padding:9px 10px}
+.tile .n{font-size:19px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.2}
+.tile .l{font-size:11px;color:var(--hint);margin-top:2px}
+
+.route{max-height:196px;overflow-y:auto;border:1px solid var(--line);border-radius:var(--r2);
+  padding:4px 6px;background:#FAFAF8}
+.ritem{display:flex;align-items:center;gap:8px;padding:5px 6px;font-size:12.5px;border-radius:6px}
+.ritem:hover{background:#EEF0EB}
+.ritem .no{width:20px;flex:0 0 auto;font-size:10.5px;color:var(--hint);text-align:right;
+  font-variant-numeric:tabular-nums}
+.ritem .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ritem .w{margin-left:auto;font-size:11px;color:var(--hint);font-variant-numeric:tabular-nums}
+.ritem.first,.ritem.last{font-weight:500}
+.ritem.first .nm{color:var(--ok)}
+.ritem.last .nm{color:var(--bad)}
+
+.nlist{max-height:290px;overflow-y:auto;border:1px solid var(--line);border-radius:var(--r2)}
+.nitem{display:flex;align-items:center;gap:9px;padding:8px 10px;font-size:12.5px;
+  border-bottom:1px solid var(--line2);transition:.1s;cursor:pointer}
+.nitem:last-child{border-bottom:0}
+.nitem:hover{background:var(--accent-soft)}
+.nitem .id{font-family:ui-monospace,monospace;font-size:11px;color:var(--hint);width:38px;flex:0 0 auto;
+  text-align:right}
+.nitem .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{font-size:10px;padding:1px 6px;border-radius:999px;background:var(--line2);color:var(--hint);
+  flex:0 0 auto}
+.badge.b{background:#E7EEFD;color:var(--accent-deep)}
+.badge.s{background:#E6F5EC;color:#0B7A3D}
+.badge.e{background:#FCEAEA;color:#B01E1E}
+
+.note{font-size:11.5px;color:var(--hint);line-height:1.6}
+.note b{color:var(--dim);font-weight:500}
+code{font-family:ui-monospace,monospace;font-size:11px;background:var(--line2);padding:1px 5px;
+  border-radius:4px;color:var(--dim)}
+
+/* ---------- 底栏 ---------- */
+.tabbar{flex:0 0 auto;display:flex;background:var(--card);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom)}
+.tab{flex:1;padding:7px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  color:var(--hint);transition:.14s;position:relative}
+.tab svg{width:21px;height:21px}
+.tab span{font-size:10.5px}
+.tab.on{color:var(--accent)}
+.tab.on span{font-weight:500}
+.tab:not(.on):hover{color:var(--dim)}
+
+.empty{padding:26px 12px;text-align:center;color:var(--hint);font-size:12.5px;line-height:1.7}
+
+@media (max-width:900px){
+  .main{flex-direction:column}
+  .sheet{width:auto;border-left:0;border-top:1px solid var(--line);max-height:44vh;
+    padding:10px 10px 12px}
+  .legend{display:none}
+  .nlist{max-height:210px}
+  .route{max-height:150px}
+}
+@media (max-width:560px){
+  .bsub{display:none}
+  .stat .pill:nth-child(n+3){display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="head">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21s7-5.3 7-11a7 7 0 1 0-14 0c0 5.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/>
+        </svg>
+      </div>
+      <div>
+        <div class="btitle">师大瑶湖 · 校园导航</div>
+        <div class="bsub" id="sub">正在载入数据…</div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="stat" id="stat"></div>
+  </header>
+
+  <div class="main">
+    <div class="mapwrap" id="mapwrap">
+      <canvas id="cv"></canvas>
+      <div class="tools">
+        <button class="tool" id="zi" title="放大">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button class="tool" id="zo" title="缩小">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg>
+        </button>
+        <button class="tool" id="zr" title="复位视图">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+        </button>
+      </div>
+      <div class="legend">
+        <div class="lg"><span class="sw" style="background:#12A150"></span>起点</div>
+        <div class="lg"><span class="sw" style="background:#DC2626"></span>终点</div>
+        <div class="lg"><span class="sw" style="background:#2F6FED"></span>路线</div>
+        <div class="lg"><span class="sw" style="background:#D9D5CA"></span>建筑</div>
+        <div class="lg"><span class="sw" style="background:#E0DCD2"></span>道路</div>
+        <div class="lg"><span class="sw" style="background:#C3BBA7"></span>主干道</div>
+      </div>
+      <div class="hintbar" id="hintbar"></div>
+      <div class="popup" id="popup">
+        <div class="pn" id="pu-name"></div>
+        <div class="pi" id="pu-info"></div>
+        <div class="pr">
+          <button id="pu-s">设为起点</button>
+          <button id="pu-e">设为终点</button>
+        </div>
+      </div>
+    </div>
+
+    <aside class="sheet">
+
+      <!-- 地图 -->
+      <section class="panel on" data-panel="map">
+        <div class="search">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+          <input id="q" type="search" placeholder="搜索建筑或路口…" autocomplete="off">
+        </div>
+        <div id="qres"></div>
+
+        <div class="card">
+          <div class="ct">快捷定位</div>
+          <div class="chips" id="quick"></div>
+        </div>
+
+        <div class="card">
+          <div class="ct">图层</div>
+          <div class="chips" id="layers"></div>
+        </div>
+
+        <div class="note">
+          <b>操作：</b>拖拽平移 · 滚轮/双指缩放 · 点任意节点选为起点或终点。<br>
+          数据源为 <code>map.txt</code> 与菜单 12 导出的 <code>road_data.txt</code>，与 C 版同源。
+        </div>
+      </section>
+
+      <!-- 路线 -->
+      <section class="panel" data-panel="route">
+        <div class="card">
+          <div class="ct">起终点</div>
+          <div class="row"><div class="slot pick" id="slot-s" data-pick="s">
+            <span class="dot s"></span><span class="nm empty grow ell" id="nm-s">点击选择起点</span>
+            <span class="x" id="clr-s" title="清除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+          </div></div>
+          <div class="row"><div class="slot pick" id="slot-e" data-pick="e">
+            <span class="dot e"></span><span class="nm empty grow ell" id="nm-e">点击选择终点</span>
+            <span class="x" id="clr-e" title="清除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+          </div></div>
+          <div class="row grow" style="margin-top:10px">
+            <div class="seg grow" id="mode">
+              <button data-m="dijkstra" class="on">最短路径</button>
+              <button data-m="bfs">最少换乘</button>
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn grow" id="go">计算路线</button>
+            <button class="btn ghost sm" id="swap" style="width:78px">交换</button>
+          </div>
+        </div>
+
+        <div class="card" id="res-card" style="display:none">
+          <div class="ct" id="res-title">结果</div>
+          <div id="res-kv"></div>
+          <div class="route" id="res-route" style="margin-top:9px"></div>
+        </div>
+
+        <div id="res-empty" class="empty">还没有路线。<br>先从地图上点两个节点，再按「计算路线」。</div>
+      </section>
+
+      <!-- 算法 -->
+      <section class="panel" data-panel="algo">
+        <div class="card">
+          <div class="ct">算法演示（与 C 版同一套实现）</div>
+          <div class="grid2" id="algos"></div>
+        </div>
+        <div class="card" id="a-card" style="display:none">
+          <div class="ct" id="a-title">结果</div>
+          <div id="a-kv"></div>
+          <div class="route" id="a-list" style="margin-top:9px;display:none"></div>
+        </div>
+        <div class="note">
+          DFS / BFS 会在图上逐节点点亮；Dijkstra 的路线逐段延伸；Prim 的边逐条加入。
+          数字与 C 版控制台一致，可以直接对照。
+        </div>
+      </section>
+
+      <!-- 数据 -->
+      <section class="panel" data-panel="data">
+        <div class="grid2" id="tiles"></div>
+        <div class="card">
+          <div class="ct">站点列表 <span id="ntotal" style="color:var(--hint)"></span></div>
+          <div class="search" style="margin-bottom:9px">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+            <input id="q2" type="search" placeholder="筛选站点…" autocomplete="off">
+          </div>
+          <div class="nlist" id="nlist"></div>
+        </div>
+      </section>
+
+    </aside>
+  </div>
+
+  <nav class="tabbar">
+    <button class="tab on" data-tab="map">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/></svg>
+      <span>地图</span>
+    </button>
+    <button class="tab" data-tab="route">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2.4"/><circle cx="18" cy="5" r="2.4"/><path d="M8.3 18.2c3.5-1 3-4.6 5.4-6.6C15.7 9.9 17.6 8.6 18 7.3"/></svg>
+      <span>路线</span>
+    </button>
+    <button class="tab" data-tab="algo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.2"/><circle cx="5" cy="18" r="2.2"/><circle cx="19" cy="18" r="2.2"/><path d="M12 7.2v4.4M10.4 13l-4 3.4M13.6 13l4 3.4"/></svg>
+      <span>算法</span>
+    </button>
+    <button class="tab" data-tab="data">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7.2" ry="3"/><path d="M4.8 6v12c0 1.7 3.2 3 7.2 3s7.2-1.3 7.2-3V6"/><path d="M4.8 12c0 1.7 3.2 3 7.2 3s7.2-1.3 7.2-3"/></svg>
+      <span>数据</span>
+    </button>
+  </nav>
+</div>
+
+<script src="campus_data.js"></script>
+<script>
+"use strict";
+(function(){
+
+/* ============================================================
+   0. 数据与图的构建
+   与 C 版保持一致的两个关键点：
+     · 节点存储顺序 = road_data.txt 的顺序（Floyd / Dijkstra 的平局判定依赖它）
+     · addEdge 是头插，所以重新读档后每个节点的邻接顺序 = 文件顺序的反向
+   ============================================================ */
+var D = window.CAMPUS_DATA;
+if(!D){ document.body.innerHTML =
+  '<div style="padding:40px;font:14px/1.7 system-ui;color:#333">'+
+  '<h2 style="font-size:16px">缺少数据文件 campus_data.js</h2>'+
+  '<p>先在项目根目录运行：<code style="background:#eee;padding:2px 6px;border-radius:4px">'+
+  'python .workbuddy/tools/export_web.py</code></p></div>'; return; }
+
+var INF = 999999;
+var N = D.nodes.length;
+/* 默认终点：优先「白鹿会馆」，找不到就用最后一个节点（旧版写死索引 72，换数据后会指错） */
+var DEF_END = (function(){ for(var i=0;i<N;i++) if(D.nodes[i].name==='白鹿会馆') return i; return N-1; })();
+var idxOf = Object.create(null);
+D.nodes.forEach(function(n,i){ idxOf[n.id] = i; });
+var nodeX = new Float64Array(N), nodeZ = new Float64Array(N);
+D.nodes.forEach(function(n,i){ nodeX[i]=n.x; nodeZ[i]=n.z; });
+
+/* 邻接表：按文件顺序逐条 unshift，复现 C 里头插后的顺序 */
+var adj = [];
+(function(){
+  for(var i=0;i<N;i++) adj.push([]);
+  D.edges.forEach(function(e){
+    var fi = idxOf[e[0]], ti = idxOf[e[1]], w = e[2];
+    if(fi===undefined||ti===undefined) return;
+    adj[fi].unshift([ti,w]);
+    adj[ti].unshift([fi,w]);
+  });
+})();
+
+/* 建筑按名字索引，用来把 map.txt 的轮廓和图中节点对上 */
+var bldByName = Object.create(null);
+D.buildings.forEach(function(b){ bldByName[b.name] = b; });
+/* 节点 → 建筑轮廓 */
+var polyOf = new Array(N).fill(null);
+D.nodes.forEach(function(n,i){
+  var b = bldByName[n.name];
+  if(b){
+    polyOf[i] = b.poly.map(function(p){ return [b.x+p[0], b.z+p[1]]; });
+  }
+});
+
+/* ============================================================
+   1. 算法（严格照搬 main.c）
+   ============================================================ */
+
+/* DFS：外层扫一遍所有节点，保证不连通分量也被访问到 → 当前数据 677 个 */
+function algoDFS(){
+  var vis = new Uint8Array(N), order = [];
+  function rec(i){
+    vis[i]=1; order.push(i);
+    var a = adj[i];
+    for(var k=0;k<a.length;k++) if(!vis[a[k][0]]) rec(a[k][0]);
+  }
+  for(var i=0;i<N;i++) if(!vis[i]) rec(i);
+  return order;
+}
+
+/* BFS：终点只停止扩展、不停止遍历统计，所以访问数 = 起点可达数 */
+function algoBFS(si, ei){
+  var vis = new Uint8Array(N), prev = new Int32Array(N).fill(-1);
+  var q = [si], order = [];
+  vis[si]=1;
+  for(var h=0;h<q.length;h++){
+    var v = q[h]; order.push(v);
+    if(v===ei) continue;
+    var a = adj[v];
+    for(var k=0;k<a.length;k++){
+      var j = a[k][0];
+      if(!vis[j]){ vis[j]=1; prev[j]=v; q.push(j); }
+    }
+  }
+  return {order:order, prev:prev, reached:vis[ei]?1:0};
+}
+
+/* Dijkstra：O(V²) 朴素版；平局取下标最小者，与 C 的选择顺序一致 */
+function algoDijkstra(si, ei){
+  var dist = new Int32Array(N).fill(INF), prev = new Int32Array(N).fill(-1);
+  var vis = new Uint8Array(N);
+  dist[si]=0;
+  var order = [];
+  for(var c=0;c<N-1;c++){
+    var u=-1, md=INF;
+    for(var j=0;j<N;j++) if(!vis[j] && dist[j]<md){ md=dist[j]; u=j; }
+    if(u===-1) break;
+    vis[u]=1; order.push(u);
+    var a = adj[u];
+    for(var k=0;k<a.length;k++){
+      var v=a[k][0], w=a[k][1];
+      if(!vis[v] && dist[u]+w < dist[v]){ dist[v]=dist[u]+w; prev[v]=u; }
+    }
+  }
+  var path = [];
+  if(dist[ei] < INF){
+    for(var cur=ei; cur!==-1; cur=prev[cur]) path.push(cur);
+    path.reverse();
+  }
+  return {dist:dist[ei], path:path, order:order};
+}
+
+/* Floyd：朴素三重循环，nxt[][] 重建路线 */
+var floydCache = null;
+function algoFloydAll(){
+  if(floydCache) return floydCache;
+  var n = N, size = n*n;
+  var dist = new Int32Array(size).fill(INF);
+  var nxt  = new Int32Array(size).fill(-1);
+  for(var i=0;i<n;i++) dist[i*n+i] = 0;
+  for(var i2=0;i2<n;i2++){
+    var a = adj[i2];
+    for(var k=0;k<a.length;k++){
+      var j=a[k][0], w=a[k][1];
+      dist[i2*n+j] = w; nxt[i2*n+j] = j;
+    }
+  }
+  for(var kk=0;kk<n;kk++){
+    var kb = kk*n;
+    for(var ii=0;ii<n;ii++){
+      var ib = ii*n, dik = dist[ib+kk];
+      if(dik === INF) continue;
+      for(var jj=0;jj<n;jj++){
+        var nd = dik + dist[kb+jj];
+        if(nd < dist[ib+jj]){ dist[ib+jj]=nd; nxt[ib+jj]=nxt[ib+kk]; }
+      }
+    }
+  }
+  floydCache = {dist:dist, nxt:nxt, n:n};
+  return floydCache;
+}
+function algoFloydPath(si, ei){
+  var f = algoFloydAll();
+  var d = f.dist[si*f.n+ei];
+  if(d >= INF) return {dist:INF, path:[]};
+  var path=[si], cur=si, guard=0;
+  while(cur!==ei && guard++ < f.n){
+    cur = f.nxt[cur*f.n+ei];
+    if(cur===-1) return {dist:INF, path:[]};
+    path.push(cur);
+  }
+  return {dist:d, path:path};
+}
+
+/* Prim：从下标最小的节点起，与 C 完全相同的取点顺序 */
+function algoPrim(){
+  var vis = new Uint8Array(N), minD = new Int32Array(N).fill(INF), par = new Int32Array(N).fill(-1);
+  var start = 0;
+  minD[start]=0;
+  var cost=0, edges=[], order=[], disconnected=false;
+  for(var c=0;c<N;c++){
+    var u=-1, mv=INF;
+    for(var i=0;i<N;i++) if(!vis[i] && minD[i]<mv){ mv=minD[i]; u=i; }
+    if(u===-1){ disconnected=true; break; }
+    vis[u]=1; order.push(u);
+    if(par[u]!==-1){ cost+=mv; edges.push([par[u],u,mv]); }
+    var a = adj[u];
+    for(var k=0;k<a.length;k++){
+      var v=a[k][0], w=a[k][1];
+      if(!vis[v] && w<minD[v]){ minD[v]=w; par[v]=u; }
+    }
+  }
+  return {edges:edges, cost:cost, start:start, disconnected:disconnected,
+          visitedCount:order.length};
+}
+
+/* 边的收集顺序必须和 C 的 collectRoadEdges 一致（i 升序 + 邻接顺序），
+   否则快排基准不同、比较次数对不上 */
+function collectEdges(){
+  var out = [];
+  for(var i=0;i<N;i++){
+    var a = adj[i];
+    for(var k=0;k<a.length;k++) if(a[k][0] > i) out.push([i, a[k][0], a[k][1]]);
+  }
+  return out;
+}
+
+/* 快排：Hoare 分区，比较次数"先计数再判断"，与 C 一致 */
+function quickSort(a, lo, hi, ctr){
+  if(lo >= hi) return;
+  var pivot = a[(lo+hi)>>1][2], i = lo, j = hi;
+  while(i <= j){
+    while(true){ ctr.n++; if(a[i][2] >= pivot) break; i++; }
+    while(true){ ctr.n++; if(a[j][2] <= pivot) break; j--; }
+    if(i <= j){ var t=a[i]; a[i]=a[j]; a[j]=t; i++; j--; }
+  }
+  quickSort(a, lo, j, ctr);
+  quickSort(a, i, hi, ctr);
+}
+function algoSort(){
+  var a = collectEdges(), b = a.slice();
+  var cq = {n:0}, t0 = performance.now();
+  quickSort(a, 0, a.length-1, cq);
+  var t1 = performance.now();
+  var cb = 0, n = b.length;
+  for(var i=0;i<n-1;i++){
+    var sw=0;
+    for(var j=0;j<n-1-i;j++){
+      cb++;
+      if(b[j][2] > b[j+1][2]){ var t=b[j]; b[j]=b[j+1]; b[j+1]=t; sw=1; }
+    }
+    if(!sw) break;
+  }
+  var t2 = performance.now();
+  return {list:a, cmpQuick:cq.n, cmpBubble:cb, msQuick:t1-t0, msBubble:t2-t1, n:n};
+}
+
+/* ============================================================
+   2. 视图与绘制
+   ============================================================ */
+var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+var wrap = document.getElementById('mapwrap');
+var W=0, H=0, dpr=1;
+var view = {cx:0, cz:0, scale:6};
+var BOUND = (function(){
+  var xs=[], zs=[];
+  D.buildings.forEach(function(b){ b.poly.forEach(function(p){ xs.push(b.x+p[0]); zs.push(b.z+p[1]); }); });
+  D.nodes.forEach(function(n){ xs.push(n.x); zs.push(n.z); });
+  D.ring.forEach(function(p){ xs.push(p[0]); zs.push(p[1]); });
+  return {x0:Math.min.apply(null,xs), x1:Math.max.apply(null,xs),
+          z0:Math.min.apply(null,zs), z1:Math.max.apply(null,zs)};
+})();
+
+function resize(){
+  dpr = Math.min(window.devicePixelRatio||1, 2);
+  W = wrap.clientWidth; H = wrap.clientHeight;
+  cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
+  cv.style.width = W+'px'; cv.style.height = H+'px';
+  draw();
+}
+function fitView(){
+  var bw = BOUND.x1-BOUND.x0, bh = BOUND.z1-BOUND.z0;
+  view.cx = (BOUND.x0+BOUND.x1)/2; view.cz = (BOUND.z0+BOUND.z1)/2;
+  view.scale = Math.min(W/(bw+9), H/(bh+9)) * 0.97;
+  if(!(view.scale>0)) view.scale = 6;
+}
+function w2s(x,z){ return [ (x-view.cx)*view.scale + W/2, (z-view.cz)*view.scale + H/2 ]; }
+function s2w(sx,sy){ return [ (sx-W/2)/view.scale + view.cx, (sy-H/2)/view.scale + view.cz ]; }
+
+function mixHex(c, white, t){          /* c: [r,g,b] 0..1 → 往白色混 t */
+  var r=Math.round((c[0]*(1-t)+1*t)*255), g=Math.round((c[1]*(1-t)+1*t)*255), b=Math.round((c[2]*(1-t)+1*t)*255);
+  return 'rgb('+r+','+g+','+b+')';
+}
+function polyPath(poly){
+  ctx.beginPath();
+  for(var i=0;i<poly.length;i++){
+    var s = w2s(poly[i][0], poly[i][1]);
+    if(i===0) ctx.moveTo(s[0],s[1]); else ctx.lineTo(s[0],s[1]);
+  }
+  ctx.closePath();
+}
+function nameOf(i){ return D.nodes[i].cn; }
+
+/* 状态 */
+var S = {
+  tab:'map', mode:'dijkstra',
+  start:-1, end:-1,
+  path:null, pathDist:0, pathTitle:'', pathExtra:null,
+  travisits:null, mst:null,
+  anim:null, animRaf:0,
+  layers:{build:true, road:true, ring:true, node:true, label:true, graph:false},
+  popup:-1,
+  pickMode:null
+};
+
+/* ---------- 绘制 ---------- */
+var LAYERS = [
+  {k:'build', n:'建筑'}, {k:'road', n:'道路'},
+  {k:'node', n:'路口'}, {k:'label', n:'标签'}, {k:'graph', n:'图结构'}
+];
+/* 当前地图 RING 0（环路已删）→ 不显示"环路"开关；地图里真有环时自动加回 */
+if(D.ring && D.ring.length > 1) LAYERS.splice(2, 0, {k:'ring', n:'环路'});
+
+function draw(){
+  if(!W) return;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+
+  /* 底：浅色纸面 + 细网格 */
+  ctx.fillStyle = '#FAFAF7';
+  ctx.fillRect(0,0,W,H);
+  var step = view.scale*5;
+  if(step > 22){
+    ctx.strokeStyle = '#EFEEE9'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    var x0 = w2s(Math.floor(BOUND.x0/5)*5, 0)[0];
+    for(var x=x0; x<W; x+=step){ ctx.moveTo(Math.round(x)+.5, 0); ctx.lineTo(Math.round(x)+.5, H); }
+    var y0 = w2s(0, Math.floor(BOUND.z0/5)*5)[1];
+    for(var y=y0; y<H; y+=step){ ctx.moveTo(0, Math.round(y)+.5); ctx.lineTo(W, Math.round(y)+.5); }
+    ctx.stroke();
+  }
+
+  /* 图结构（可选）：先把底图压淡再看拓扑 */
+  if(S.layers.graph){
+    ctx.strokeStyle = '#D6DEF0'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    D.edges.forEach(function(e){
+      var a = idxOf[e[0]], b = idxOf[e[1]];
+      if(a===undefined||b===undefined) return;
+      var p = w2s(nodeX[a], nodeZ[a]), q = w2s(nodeX[b], nodeZ[b]);
+      ctx.moveTo(p[0],p[1]); ctx.lineTo(q[0],q[1]);
+    });
+    ctx.stroke();
+  }
+
+  /* 道路 */
+  if(S.layers.road){
+    ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.strokeStyle = '#E0DCD2'; ctx.lineWidth = Math.max(1.6, view.scale*0.34);
+    ctx.beginPath();
+    D.roads.forEach(function(r){
+      for(var i=0;i<r.length;i++){
+        var p = w2s(r[i][0], r[i][1]);
+        if(i===0) ctx.moveTo(p[0],p[1]); else ctx.lineTo(p[0],p[1]);
+      }
+    });
+    ctx.stroke();
+  }
+  /* 粗路（主干道）：与 main.c 的 roadStyle 对齐 —— 粗路宽度是细路的 3 倍（ROAD_W_THICK/ROAD_W_THIN = 1.8/0.6），颜色更深 */
+  if(S.layers.road && D.thick && D.thick.length){
+    ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.strokeStyle = '#C3BBA7'; ctx.lineWidth = Math.max(4.8, view.scale*1.02);
+    ctx.beginPath();
+    D.thick.forEach(function(r){
+      for(var i=0;i<r.length;i++){
+        var p = w2s(r[i][0], r[i][1]);
+        if(i===0) ctx.moveTo(p[0],p[1]); else ctx.lineTo(p[0],p[1]);
+      }
+    });
+    ctx.stroke();
+  }
+  if(S.layers.ring && D.ring.length>1){
+    ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.strokeStyle = '#CFCABD'; ctx.lineWidth = Math.max(2.4, view.scale*0.58);
+    ctx.beginPath();
+    for(var i=0;i<D.ring.length;i++){
+      var p = w2s(D.ring[i][0], D.ring[i][1]);
+      if(i===0) ctx.moveTo(p[0],p[1]); else ctx.lineTo(p[0],p[1]);
+    }
+    ctx.closePath(); ctx.stroke();
+  }
+
+  /* 建筑：按高度微调饱和度，高层更实一点 */
+  if(S.layers.build){
+    D.buildings.forEach(function(b){
+      var h = Math.min(1, (b.h||0)/28);
+      var filled = b.poly.map(function(p){ return [b.x+p[0], b.z+p[1]]; });
+      polyPath(filled);
+      ctx.fillStyle = mixHex(b.c, 1, 0.64 - 0.2*h);
+      ctx.fill();
+      ctx.strokeStyle = mixHex(b.c, 0, 0.42);
+      ctx.lineWidth = 0.9;
+      ctx.stroke();
+      if((b.c[2] > b.c[0]+0.12 && b.c[2] > 0.5) || /静湖/.test(b.name)){
+        ctx.fillStyle = 'rgba(90,150,200,.16)'; ctx.fill();
+      }
+    });
+  }
+
+  /* 路线（先白边后主线，任何底色上都清楚） */
+  if(S.path && S.path.length>1) drawPath(1);
+
+  /* 遍历点亮 */
+  if(S.travisits) drawVisits();
+
+  /* 最小生成树 */
+  if(S.mst) drawMST();
+
+  /* 节点：建筑是大点（有名），路口是小点 */
+  if(S.layers.node){
+    var r = Math.max(1.3, Math.min(3.4, view.scale*0.15));
+    ctx.fillStyle = 'rgba(120,126,114,.5)';
+    ctx.beginPath();
+    for(var i=0;i<N;i++){
+      if(polyOf[i]) continue;
+      var p2 = w2s(nodeX[i], nodeZ[i]);
+      if(p2[0]<-10||p2[0]>W+10||p2[1]<-10||p2[1]>H+10) continue;
+      ctx.moveTo(p2[0]+r, p2[1]);
+      ctx.arc(p2[0], p2[1], r, 0, 6.2832);
+    }
+    ctx.fill();
+  }
+  ctx.fillStyle = '#6B7168';
+  ctx.beginPath();
+  for(var i2=0;i2<N;i2++){
+    if(!polyOf[i2]) continue;
+    var p3 = w2s(nodeX[i2], nodeZ[i2]);
+    if(p3[0]<-10||p3[0]>W+10||p3[1]<-10||p3[1]>H+10) continue;
+    ctx.moveTo(p3[0]+2.6, p3[1]);
+    ctx.arc(p3[0], p3[1], 2.6, 0, 6.2832);
+  }
+  ctx.fill();
+
+  /* 标签 */
+  if(S.layers.label) drawLabels();
+
+  /* 起终点 */
+  if(S.start>=0) drawPin(S.start, '#12A150', '起');
+  if(S.end>=0)   drawPin(S.end,   '#DC2626', '终');
+}
+
+function drawPath(alpha){
+  var pts = S.path.map(function(i){ return w2s(nodeX[i], nodeZ[i]); });
+  if(pts.length<2) return;
+  var lim = pts.length;
+  if(S.anim && S.anim.kind==='path'){
+    var t = Math.min(1, (performance.now()-S.anim.t0)/S.anim.dur);
+    lim = Math.max(2, Math.ceil(1 + t*(pts.length-1)));
+  }
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  var w0 = Math.max(4.5, Math.min(9, view.scale*0.95));
+  ctx.globalAlpha = alpha===undefined?1:alpha;
+  ctx.strokeStyle = 'rgba(255,255,255,.92)'; ctx.lineWidth = wo0(w0);
+  strokePolyline(pts, lim);
+  ctx.strokeStyle = '#2F6FED'; ctx.lineWidth = w0;
+  strokePolyline(pts, lim);
+  ctx.globalAlpha = 1;
+}
+function wo0(w){ return w + 3.5; }
+function strokePolyline(pts, lim){
+  ctx.beginPath();
+  for(var i=0;i<lim && i<pts.length;i++){
+    if(i===0) ctx.moveTo(pts[i][0], pts[i][1]); else ctx.lineTo(pts[i][0], pts[i][1]);
+  }
+  ctx.stroke();
+}
+
+function drawVisits(){
+  var t = S.anim && S.anim.kind==='trav'
+    ? Math.min(1, (performance.now()-S.anim.t0)/S.anim.dur) : 1;
+  var order = S.travisits, total = order.length;
+  var shown = Math.max(1, Math.ceil(t*total));
+  var rec = Math.max(1, total-Math.min(total, Math.round(total*0.08)));
+  for(var k=0;k<shown && k<total;k++){
+    var i = order[k], p = w2s(nodeX[i], nodeZ[i]);
+    var recent = k >= total-14;
+    var alpha = k >= rec ? 1 : 0.32;
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = k>=total-1 ? '#E8590C' : '#2F6FED';
+    ctx.beginPath();
+    ctx.arc(p[0], p[1], recent?4.6:2.2, 0, 6.2832);
+    ctx.fill();
+    if(recent){
+      ctx.fillStyle = '#fff'; ctx.font='500 8.5px system-ui';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(String(k+1), p[0], p[1]+0.3);
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawMST(){
+  var t = S.anim && S.anim.kind==='mst'
+    ? Math.min(1, (performance.now()-S.anim.t0)/S.anim.dur) : 1;
+  var e = S.mst.edges, shown = Math.max(1, Math.ceil(t*e.length));
+  ctx.lineCap='round';
+  ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 6.5;
+  ctx.beginPath();
+  for(var k=0;k<shown && k<e.length;k++){
+    var p = w2s(nodeX[e[k][0]], nodeZ[e[k][0]]), q = w2s(nodeX[e[k][1]], nodeZ[e[k][1]]);
+    ctx.moveTo(p[0],p[1]); ctx.lineTo(q[0],q[1]);
+  }
+  ctx.stroke();
+  ctx.strokeStyle = '#7A5AF8'; ctx.lineWidth = 3;
+  ctx.beginPath();
+  for(var k2=0;k2<shown && k2<e.length;k2++){
+    var p2 = w2s(nodeX[e[k2][0]], nodeZ[e[k2][0]]), q2 = w2s(nodeX[e[k2][1]], nodeZ[e[k2][1]]);
+    ctx.moveTo(p2[0],p2[1]); ctx.lineTo(q2[0],q2[1]);
+  }
+  ctx.stroke();
+}
+
+var KEY_LABELS = ['正大门','正大坊','正大广场','图文信息中心','钟楼','静湖桥','惟义楼',
+  '先骕楼','名达楼','方荫楼','实验大楼','瑶湖体育场','瑶湖体育馆','长胜体育场','一食堂',
+  '二食堂','大学生活动中心','白鹿会馆','国际交流中心','美术学院','天浪楼','奥体地铁站','美术馆'];
+
+function drawLabels(){
+  var placed = [];
+  function tryLabel(i, force, color, weight){
+    var n = D.nodes[i];
+    var b = bldByName[n.name];
+    var ax = n.x, az = n.z;
+    if(polyOf[i]){                       /* 贴着轮廓下沿放 */
+      var mz = -1e9, mx = n.x;
+      polyOf[i].forEach(function(p){ if(p[1]>mz){ mz=p[1]; mx=p[0]; } });
+      ax = mx; az = mz;
+    }
+    var p = w2s(ax, az);
+    var txt = force ? n.cn : shortName(n.cn);
+    var fs = force ? 12 : 11;
+    ctx.font = weight + ' ' + fs + 'px system-ui,"Microsoft YaHei",sans-serif';
+    var tw = ctx.measureText(txt).width;
+    var x = p[0]-tw/2, y = p[1]+11;
+    if(x<2) x=2; if(x+tw>W-2) x=W-2-tw;
+    if(y>H-4) y=H-4;
+    var box = [x-3, y-fs-1, x+tw+3, y+5];
+    for(var k=0;k<placed.length;k++){
+      var q = placed[k];
+      if(box[0]<q[2]&&box[2]>q[0]&&box[1]<q[3]&&box[3]>q[1]) return false;
+    }
+    placed.push(box);
+    ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    ctx.lineWidth = 3; ctx.strokeStyle='rgba(255,255,255,.94)';
+    ctx.strokeText(txt, x, y);
+    ctx.fillStyle = color || '#41463F';
+    ctx.fillText(txt, x, y);
+    return true;
+  }
+  /* 路线上的节点优先；起终点即使是路口也要标出来，其余路口不标（太吵） */
+  var forced = [];
+  if(S.start>=0) forced.push([S.start, true]);
+  if(S.end>=0)   forced.push([S.end, true]);
+  if(S.path) S.path.forEach(function(i){ if(forced.length<2 || !forced.some(function(f){return f[0]===i;})) forced.push([i, false]); });
+  forced.forEach(function(f){
+    var i = f[0];
+    if(!polyOf[i] && !f[1]) return;
+    tryLabel(i, true, i===S.start?'#0B7A3D':(i===S.end?'#B01E1E':'#1E52C4'), '500');
+  });
+
+  if(view.scale < 3.6){
+    KEY_LABELS.forEach(function(nm){
+      for(var i=0;i<N;i++) if(D.nodes[i].name===nm && polyOf[i]){ tryLabel(i,false); break; }
+    });
+    return;
+  }
+  var cam = [];
+  for(var i2=0;i2<N;i2++){
+    if(!polyOf[i2]) continue;
+    var p2 = w2s(nodeX[i2], nodeZ[i2]);
+    if(p2[0]<-60||p2[0]>W+60||p2[1]<-30||p2[1]>H+30) continue;
+    cam.push([p2[0], p2[1], i2]);
+  }
+  cam.sort(function(a,b){ return a[1]-b[1]; });
+  cam.forEach(function(c){ tryLabel(c[2], false); });
+}
+/* 地图上空间紧张时才用短名。名字本身已经是中文（很紧凑），
+   只把"学生公寓13栋"这类前缀压掉 → "13栋"，保留"栋"以免只剩个数字 */
+function shortName(s){
+  return s.replace('学生公寓','').replace('研究生公寓','研')
+          .replace('江西师范大学瑶湖校区','') || s;
+}
+
+function drawPin(i, color, ch){
+  var p = w2s(nodeX[i], nodeZ[i]);
+  var r = 11;
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(p[0], p[1]);
+  ctx.lineTo(p[0]-r*0.72, p[1]-r*1.5);
+  ctx.quadraticCurveTo(p[0]-r*0.9, p[1]-r*2.5, p[0], p[1]-r*2.5);
+  ctx.quadraticCurveTo(p[0]+r*0.9, p[1]-r*2.5, p[0]+r*0.72, p[1]-r*1.5);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.strokeStyle = 'rgba(255,255,255,.95)'; ctx.lineWidth = 2;
+  ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(p[0], p[1]-r*1.42, 3.1, 0, 6.2832);
+  ctx.fillStyle='#fff'; ctx.fill();
+  ctx.restore();
+}
+
+/* ---------- 动画驱动 ---------- */
+function startAnim(kind, dur){
+  S.anim = {kind:kind, t0:performance.now(), dur:dur};
+  if(!S.animRaf) loop();
+}
+function loop(){
+  S.animRaf = requestAnimationFrame(function(){
+    var t = S.anim ? (performance.now()-S.anim.t0)/S.anim.dur : 1;
+    draw();
+    if(t < 1){ loop(); }
+    else { S.anim = null; S.animRaf = 0; draw(); }
+  });
+}
+
+/* ============================================================
+   3. 交互：平移 / 缩放 / 点选
+   ============================================================ */
+var drag = null;
+cv.addEventListener('pointerdown', function(ev){
+  cv.setPointerCapture(ev.pointerId);
+  drag = {x:ev.clientX, y:ev.clientY, cx:view.cx, cz:view.cz, moved:0};
+  cv.classList.add('grabbing');
+});
+cv.addEventListener('pointermove', function(ev){
+  if(!drag) return;
+  var dx = ev.clientX-drag.x, dy = ev.clientY-drag.y;
+  if(Math.abs(dx)+Math.abs(dy) > 3) drag.moved = 1;
+  view.cx = drag.cx - dx/view.scale;
+  view.cz = drag.cz - dy/view.scale;
+  draw();
+});
+cv.addEventListener('pointerup', function(ev){
+  cv.classList.remove('grabbing');
+  var wasDrag = drag && drag.moved;
+  drag = null;
+  if(!wasDrag) onTap(ev);
+});
+cv.addEventListener('pointercancel', function(){ drag=null; cv.classList.remove('grabbing'); });
+cv.addEventListener('wheel', function(ev){
+  ev.preventDefault();
+  var r = cv.getBoundingClientRect();
+  var mx = ev.clientX-r.left, my = ev.clientY-r.top;
+  var before = s2w(mx,my);
+  view.scale *= (ev.deltaY < 0 ? 1.14 : 1/1.14);
+  view.scale = Math.max(1.2, Math.min(90, view.scale));
+  var after = s2w(mx,my);
+  view.cx += before[0]-after[0];
+  view.cz += before[1]-after[1];
+  draw();
+}, {passive:false});
+var pinch = null;
+cv.addEventListener('touchmove', function(ev){
+  if(ev.touches.length!==2) return;
+  ev.preventDefault();
+  var a = ev.touches[0], b = ev.touches[1];
+  var dist = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+  var mid = [(a.clientX+b.clientX)/2, (a.clientY+b.clientY)/2];
+  if(pinch){
+    var r = cv.getBoundingClientRect();
+    var mx = mid[0]-r.left, my = mid[1]-r.top;
+    var before = s2w(mx,my);
+    view.scale = Math.max(1.2, Math.min(90, view.scale * (dist/pinch.dist)));
+    var after = s2w(mx,my);
+    view.cx += before[0]-after[0]; view.cz += before[1]-after[1];
+    draw();
+  }
+  pinch = {dist:dist};
+}, {passive:false});
+cv.addEventListener('touchend', function(){ pinch = null; });
+
+function hitNode(sx, sy){
+  var best=-1, bd=1e9;
+  var lim = view.scale<3 ? 13 : 11;
+  for(var i=0;i<N;i++){
+    var p = w2s(nodeX[i], nodeZ[i]);
+    var d = Math.hypot(p[0]-sx, p[1]-sy);
+    if(d < lim && d < bd){ bd=d; best=i; }
+  }
+  return best;
+}
+function onTap(ev){
+  var r = cv.getBoundingClientRect();
+  var mx = ev.clientX-r.left, my = ev.clientY-r.top;
+  var i = hitNode(mx,my);
+  if(i < 0){ hidePopup(); return; }
+  if(S.pickMode){ setSlot(S.pickMode, i); S.pickMode=null; setPickUI(); hidePopup(); return; }
+  showPopup(i, mx, my);
+}
+function showPopup(i, mx, my){
+  S.popup = i;
+  var el = document.getElementById('popup');
+  document.getElementById('pu-name').textContent = nameOf(i);
+  document.getElementById('pu-info').textContent = '编号 '+D.nodes[i].id + ' · (' +
+    nodeX[i].toFixed(1) + ', ' + nodeZ[i].toFixed(1) + ')';
+  el.classList.add('on');
+  var halfW = 86;
+  el.style.left = Math.max(halfW+4, Math.min(W-halfW-4, mx)) + 'px';
+  el.style.top  = Math.max(78, my) + 'px';
+}
+function hidePopup(){ S.popup=-1; document.getElementById('popup').classList.remove('on'); }
+
+/* ============================================================
+   4. 界面绑定
+   ============================================================ */
+function $(s){ return document.querySelector(s); }
+function $$(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); }
+
+/* 标签切换 */
+$$('.tab').forEach(function(t){
+  t.addEventListener('click', function(){
+    S.tab = t.dataset.tab;
+    $$('.tab').forEach(function(x){ x.classList.toggle('on', x===t); });
+    $$('.panel').forEach(function(p){ p.classList.toggle('on', p.dataset.panel===S.tab); });
+  });
+});
+/* 图层 chips */
+(function(){
+  var box = document.getElementById('layers');
+  LAYERS.forEach(function(L){
+    var b = document.createElement('button');
+    b.className = 'chip' + (S.layers[L.k]?' on':'');
+    b.textContent = L.n;
+    b.addEventListener('click', function(){
+      S.layers[L.k] = !S.layers[L.k];
+      b.classList.toggle('on', S.layers[L.k]);
+      draw();
+    });
+    box.appendChild(b);
+  });
+})();
+/* 快捷定位 */
+(function(){
+  var box = document.getElementById('quick');
+  ['正大门','图文信息中心','学生公寓1栋','一食堂','瑶湖体育场','瑶湖体育馆','奥体地铁站','白鹿会馆']
+  .forEach(function(nm){
+    var b = document.createElement('button');
+    b.className='chip'; b.textContent=nm;
+    b.addEventListener('click', function(){ focusName(nm); });
+    box.appendChild(b);
+  });
+})();
+function focusName(nm){
+  for(var i=0;i<N;i++){
+    if(D.nodes[i].name===nm || D.nodes[i].cn===nm){
+      view.cx = nodeX[i]; view.cz = nodeZ[i];
+      if(view.scale < 9) view.scale = 11;
+      draw();
+      toast('已定位：'+nameOf(i));
+      return i;
+    }
+  }
+  toast('没找到「'+nm+'」');
+  return -1;
+}
+
+/* 工具按钮 */
+document.getElementById('zi').onclick = function(){ zoomAt(1.25); };
+document.getElementById('zo').onclick = function(){ zoomAt(1/1.25); };
+document.getElementById('zr').onclick = function(){ fitView(); draw(); toast('视图已复位'); };
+function zoomAt(k){
+  view.scale = Math.max(1.2, Math.min(90, view.scale*k));
+  draw();
+}
+var toastTimer=0;
+function toast(msg){
+  var el = document.getElementById('hintbar');
+  el.textContent = msg; el.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.classList.remove('on'); }, 1600);
+}
+
+/* 起终点槽位 */
+function setSlot(which, i){
+  if(which==='s') S.start = i; else S.end = i;
+  setPickUI(); draw();
+}
+function setPickUI(){
+  var ns = document.getElementById('nm-s'), ne = document.getElementById('nm-e');
+  if(S.start>=0){ ns.textContent = nameOf(S.start); ns.classList.remove('empty'); }
+  else { ns.textContent = '点击选择起点'; ns.classList.add('empty'); }
+  if(S.end>=0){ ne.textContent = nameOf(S.end); ne.classList.remove('empty'); }
+  else { ne.textContent = '点击选择终点'; ne.classList.add('empty'); }
+  document.getElementById('slot-s').classList.toggle('pick', true);
+  document.getElementById('slot-e').classList.toggle('pick', true);
+}
+document.getElementById('slot-s').addEventListener('click', function(ev){
+  if(ev.target.closest('#clr-s')) return;
+  S.pickMode = 's'; setPickUI(); toast('请在地图上点选起点');
+});
+document.getElementById('slot-e').addEventListener('click', function(ev){
+  if(ev.target.closest('#clr-e')) return;
+  S.pickMode = 'e'; setPickUI(); toast('请在地图上点选终点');
+});
+document.getElementById('clr-s').addEventListener('click', function(){
+  S.start=-1; S.path=null; S.travisits=null; setPickUI(); draw();
+});
+document.getElementById('clr-e').addEventListener('click', function(){
+  S.end=-1; S.path=null; S.travisits=null; setPickUI(); draw();
+});
+document.getElementById('swap').addEventListener('click', function(){
+  var t=S.start; S.start=S.end; S.end=t; setPickUI(); draw();
+});
+$$('#mode button').forEach(function(b){
+  b.addEventListener('click', function(){
+    S.mode = b.dataset.m; 
+    $$('#mode button').forEach(function(x){ x.classList.toggle('on', x===b); });
+  });
+});
+document.getElementById('pu-s').onclick = function(){ setSlot('s', S.popup); hidePopup(); toast('起点：'+nameOf(S.start)); };
+document.getElementById('pu-e').onclick = function(){ setSlot('e', S.popup); hidePopup(); toast('终点：'+nameOf(S.end)); };
+
+/* ---------- 计算路线 ---------- */
+document.getElementById('go').addEventListener('click', function(){
+  if(S.start<0 || S.end<0){ toast('请先选好起点和终点'); return; }
+  if(S.start===S.end){ toast('起点和终点相同'); return; }
+  S.travisits=null; S.mst=null;
+  var card = document.getElementById('res-card'), em = document.getElementById('res-empty');
+  em.style.display='none'; card.style.display='';
+
+  if(S.mode==='dijkstra'){
+    var r = algoDijkstra(S.start, S.end);
+    if(r.dist>=INF){
+      document.getElementById('res-title').textContent='最短路径';
+      document.getElementById('res-kv').innerHTML = kv('结果','两点之间不可达');
+      document.getElementById('res-route').innerHTML='';
+      S.path=null; draw(); return;
+    }
+    S.path = r.path; S.pathDist = r.dist;
+    document.getElementById('res-title').textContent='最短路径 · Dijkstra';
+    document.getElementById('res-kv').innerHTML =
+      kv('总长度', r.dist, true) + kv('途经站点', r.path.length+' 个');
+    renderRoute(r.path, r.dist);
+    startAnim('path', 900);
+    toast('最短路径 '+r.dist+'，共 '+r.path.length+' 个站点');
+  } else {
+    var b = algoBFS(S.start, S.end);
+    if(!b.reached){
+      document.getElementById('res-title').textContent='最少换乘 · BFS';
+      document.getElementById('res-kv').innerHTML = kv('结果','两点之间不可达');
+      document.getElementById('res-route').innerHTML='';
+      S.path=null; draw(); return;
+    }
+    var path=[], cur=S.end;
+    while(cur!==-1){ path.push(cur); if(cur===S.start) break; cur=b.prev[cur]; }
+    path.reverse();
+    var w=0;
+    for(var k=1;k<path.length;k++) w += weightBetween(path[k-1], path[k]);
+    S.path=path; S.pathDist=w;
+    document.getElementById('res-title').textContent='最少换乘 · BFS';
+    var hops = path.length - 1;              /* 与 C 版一致：hops = 节点数 - 1 */
+    document.getElementById('res-kv').innerHTML =
+      kv('换乘次数', hops+' 次') +
+      kv('最少跳数', (hops+1)+' 跳') +
+      kv('路径长度', w, true);
+    renderRoute(path, w);
+    startAnim('path', 900);
+    toast('最少换乘：'+hops+' 次换乘，长度 '+w);
+  }
+});
+function weightBetween(a,b){
+  var arr = adj[a];
+  for(var i=0;i<arr.length;i++) if(arr[i][0]===b) return arr[i][1];
+  return 0;
+}
+function kv(k, v, big){
+  return '<div class="kv"><span class="k">'+esc(k)+'</span><span class="v'+(big?' big':'')+'">'+esc(v)+'</span></div>';
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function renderRoute(path, total){
+  var h='';
+  for(var i=0;i<path.length;i++){
+    var cls = i===0?'first':(i===path.length-1?'last':'');
+    var w = i>0 ? weightBetween(path[i-1], path[i]) : 0;
+    h += '<div class="ritem '+cls+'"><span class="no">'+(i+1)+'</span>'+
+         '<span class="nm">'+esc(nameOf(path[i]))+'</span>'+
+         '<span class="w">'+(i>0?('+'+w):'')+'</span></div>';
+  }
+  document.getElementById('res-route').innerHTML = h;
+}
+
+/* ---------- 算法面板 ---------- */
+var ALGOS = [
+  {k:'dfs',  n:'DFS 深度优先遍历'},
+  {k:'bfs',  n:'BFS 广度优先遍历'},
+  {k:'dij',  n:'Dijkstra 最短路'},
+  {k:'floyd',n:'Floyd 全源最短路'},
+  {k:'prim', n:'Prim 最小生成树'},
+  {k:'sort', n:'道路排序对比'}
+];
+(function(){
+  var box = document.getElementById('algos');
+  ALGOS.forEach(function(a){
+    var b = document.createElement('button');
+    b.className='btn ghost sm'; b.textContent=a.n;
+    b.addEventListener('click', function(){ runAlgo(a.k); });
+    box.appendChild(b);
+  });
+})();
+function algoPanel(title, rows, listHTML){
+  document.getElementById('a-card').style.display='';
+  document.getElementById('a-title').textContent = title;
+  document.getElementById('a-kv').innerHTML = rows;
+  var L = document.getElementById('a-list');
+  if(listHTML){ L.style.display=''; L.innerHTML = listHTML; } else { L.style.display='none'; }
+}
+function runAlgo(k){
+  S.path=null; S.travisits=null; S.mst=null;
+  if(k==='dfs'){
+    var o = algoDFS();
+    S.travisits = o;
+    algoPanel('DFS 深度优先遍历',
+      kv('起点', nameOf(o[0])) + kv('访问节点', o.length+' 个', true) +
+      kv('起始序列', o.slice(0,5).map(nameOf).join(' → ')+' …'));
+    startAnim('trav', 1400);
+    toast('DFS 访问了 '+o.length+' 个节点');
+  }
+  else if(k==='bfs'){
+    var s = S.start>=0?S.start:0, e = S.end>=0?S.end:(N-1);
+    var r = algoBFS(s,e);
+    S.travisits = r.order;
+    if(r.reached){
+      var bp=[], bc=e;
+      while(bc!==-1){ bp.push(bc); if(bc===s) break; bc=r.prev[bc]; }
+      bp.reverse();
+      var hops = bp.length-1, tw = 0;
+      for(var bi=1;bi<bp.length;bi++) tw += weightBetween(bp[bi-1], bp[bi]);
+      S.path = bp; S.pathDist = tw;
+      algoPanel('BFS 广度优先（最少换乘）',
+        kv('起点', nameOf(s)) + kv('终点', nameOf(e)) +
+        kv('访问节点', r.order.length+' 个', true) +
+        kv('换乘次数', hops+' 次') + kv('最少跳数', (hops+1)+' 跳') +
+        kv('路径长度', tw, true));
+      renderRouteInto('a-list', bp);
+      startAnim('path', 900);
+      toast('BFS：'+nameOf(s)+' → '+nameOf(e)+'，'+hops+' 跳');
+    } else {
+      algoPanel('BFS 广度优先遍历',
+        kv('起点', nameOf(s)) + kv('访问节点', r.order.length+' 个', true) + kv('结果','不可达'));
+      startAnim('trav', 1400);
+      toast('BFS 从 '+nameOf(s)+' 出发访问了 '+r.order.length+' 个节点');
+    }
+  }
+  else if(k==='dij'){
+    var s2 = S.start>=0?S.start:0, e2 = S.end>=0?S.end:DEF_END;
+    var r2 = algoDijkstra(s2,e2);
+    if(r2.dist>=INF){ algoPanel('Dijkstra 最短路径', kv('结果','不可达')); }
+    else{
+      S.path = r2.path; S.pathDist=r2.dist;
+      algoPanel('Dijkstra 最短路径',
+        kv('起点', nameOf(s2)) + kv('终点', nameOf(e2)) +
+        kv('途经站点', r2.path.length+' 个') + kv('总长度', r2.dist, true));
+      renderRouteInto('a-list', r2.path);
+      startAnim('path', 900);
+    }
+    toast('Dijkstra：'+nameOf(s2)+' → '+nameOf(e2));
+  }
+  else if(k==='floyd'){
+    toast('Floyd 正在计算全源最短路…');
+    setTimeout(function(){
+      var s3 = S.start>=0?S.start:0, e3 = S.end>=0?S.end:DEF_END;
+      var t0=performance.now();
+      var r3 = algoFloydPath(s3,e3);
+      var ms = performance.now()-t0;
+      if(r3.dist>=INF){ algoPanel('Floyd 任意两点最短路', kv('结果','不可达')); return; }
+      S.path = r3.path; S.pathDist = r3.dist;
+      algoPanel('Floyd 任意两点最短路',
+        kv('起点', nameOf(s3)) + kv('终点', nameOf(e3)) +
+        kv('总长度', r3.dist, true) + kv('规模', N+' × '+N+' 矩阵') +
+        kv('耗时', ms.toFixed(0)+' ms'));
+      renderRouteInto('a-list', r3.path);
+      startAnim('path', 900);
+    }, 30);
+  }
+  else if(k==='prim'){
+    var p = algoPrim();
+    S.mst = p;
+    algoPanel('Prim 最小生成树',
+      kv('边数', p.edges.length+' 条', true) + kv('总代价', p.cost, true) +
+      kv('起始站点', nameOf(p.start)) + kv('规模', '站点 '+N+' 个') +
+      (p.disconnected ? kv('提示','图不连通，以上为起点所在连通分量') : ''));
+    startAnim('mst', 1600);
+    toast('Prim：'+p.edges.length+' 条边，总代价 '+p.cost);
+  }
+  else if(k==='sort'){
+    var s = algoSort();
+    var top = s.list.slice(0,20);
+    var h='';
+    top.forEach(function(e2,i){
+      h += '<div class="ritem"><span class="no">'+(i+1)+'</span>'+
+        '<span class="nm">'+esc(nameOf(e2[0]))+' — '+esc(nameOf(e2[1]))+'</span>'+
+        '<span class="w">'+e2[2]+'</span></div>';
+    });
+    algoPanel('道路排序（按权值升序，前 20 条）',
+      kv('收集道路数', s.n+' 条') +
+      kv('快速排序', s.msQuick.toFixed(2)+' ms（'+s.cmpQuick+' 次比较）', true) +
+      kv('冒泡排序', s.msBubble.toFixed(2)+' ms（'+s.cmpBubble+' 次比较）'),
+      h);
+    toast('快排 '+s.cmpQuick+' 次比较 / 冒泡 '+s.cmpBubble+' 次');
+  }
+  draw();
+}
+function renderRouteInto(id, path){
+  var h='';
+  for(var i=0;i<path.length;i++){
+    var cls = i===0?'first':(i===path.length-1?'last':'');
+    h += '<div class="ritem '+cls+'"><span class="no">'+(i+1)+'</span>'+
+         '<span class="nm">'+esc(nameOf(path[i]))+'</span></div>';
+  }
+  var L=document.getElementById(id);
+  L.style.display=''; L.innerHTML=h;
+}
+
+/* ---------- 搜索 ---------- */
+function searchNodes(q, limit){
+  q = (q||'').trim().toLowerCase();
+  var out=[];
+  for(var i=0;i<N;i++){
+    var n=D.nodes[i];
+    if(!q || n.cn.toLowerCase().indexOf(q)>=0 || n.name.toLowerCase().indexOf(q)>=0
+          || String(n.id)===q){
+      out.push(i);
+      if(out.length>=limit) break;
+    }
+  }
+  return out;
+}
+function bindSearch(inputId, resId, onPick){
+  var inp = document.getElementById(inputId), box = resId?document.getElementById(resId):null;
+  if(!inp) return;
+  inp.addEventListener('input', function(){
+    var hits = searchNodes(inp.value, 40);
+    if(!box){
+      /* 数据面板：直接过滤列表 */
+      renderNList(hits);
+      return;
+    }
+    if(!inp.value.trim()){ box.innerHTML=''; return; }
+    if(!hits.length){ box.innerHTML='<div class="empty" style="padding:14px">没有匹配的站点</div>'; return; }
+    var h='<div class="nlist" style="max-height:196px;margin-top:8px">';
+    hits.slice(0,20).forEach(function(i){
+      h += '<div class="nitem" data-i="'+i+'"><span class="id">'+D.nodes[i].id+'</span>'+
+           '<span class="nm">'+esc(nameOf(i))+'</span></div>';
+    });
+    h += '</div>';
+    box.innerHTML = h;
+    Array.prototype.forEach.call(box.querySelectorAll('.nitem'), function(el){
+      el.addEventListener('click', function(){ onPick(+el.dataset.i); });
+    });
+  });
+}
+bindSearch('q','qres', function(i){
+  view.cx=nodeX[i]; view.cz=nodeZ[i];
+  if(view.scale<9) view.scale=11;
+  setSlot(S.start<0?'s':'e', i);
+  draw(); toast('已选：'+nameOf(i));
+});
+
+/* ---------- 数据面板 ---------- */
+function renderTiles(){
+  var t=[
+    ['建筑', D.meta.buildingCount],
+    ['路口', D.meta.roadNamed],
+    ['节点', D.meta.nodeCount],
+    ['道路', D.meta.edgeCount]
+  ];
+  var h='';
+  t.forEach(function(x){ h += '<div class="tile"><div class="n">'+x[1]+'</div><div class="l">'+x[0]+'</div></div>'; });
+  document.getElementById('tiles').innerHTML=h;
+}
+function renderNList(list){
+  var h='';
+  list.forEach(function(i){
+    var n=D.nodes[i];
+    var b = n.name==='[road]'
+      ? '<span class="badge">路口</span>'
+      : '<span class="badge b">建筑</span>';
+    if(i===S.start) b += '<span class="badge s">起</span>';
+    if(i===S.end)   b += '<span class="badge e">终</span>';
+    h += '<div class="nitem" data-i="'+i+'"><span class="id">'+n.id+'</span>'+
+         '<span class="nm">'+esc(nameOf(i))+'</span>'+b+'</div>';
+  });
+  var el=document.getElementById('nlist');
+  el.innerHTML = h || '<div class="empty">没有匹配的站点</div>';
+  Array.prototype.forEach.call(el.querySelectorAll('.nitem'), function(d){
+    d.addEventListener('click', function(){ focusName(D.nodes[+d.dataset.i].name); });
+  });
+}
+document.getElementById('q2').addEventListener('input', function(){
+  renderNList(searchNodes(this.value, 400));
+});
+
+/* ============================================================
+   5. 启动
+   ============================================================ */
+document.getElementById('sub').textContent =
+  D.meta.buildingCount+' 栋建筑 · '+D.meta.roadNamed+' 个路口 · '+D.meta.edgeCount+' 条道路';
+document.getElementById('stat').innerHTML =
+  '<span class="pill">节点 <b>'+D.meta.nodeCount+'</b></span>'+
+  '<span class="pill">道路 <b>'+D.meta.edgeCount+'</b></span>'+
+  '<span class="pill">图存档 v'+D.meta.graphVersion+'</span>';
+document.getElementById('ntotal').textContent = '（共 '+N+' 个）';
+renderTiles();
+renderNList(searchNodes('', 400));
+setPickUI();
+window.addEventListener('resize', function(){ resize(); });
+
+resize();
+fitView();
+draw();
+
+/* 演示：默认选中正大门 → 白鹿会馆，并直接算出一条路线，打开就有内容
+   地址栏 #tab=algo&run=prim 之类的深链可以直达某个状态，也方便截图核对 */
+(function(){
+  var h = location.hash.replace(/^#/, ''), Q = {};
+  h.split('&').forEach(function(kv){
+    var p = kv.split('=');
+    if(p[0]) Q[decodeURIComponent(p[0])] = decodeURIComponent(p[1]||'');
+  });
+  function idxByName(nm){ for(var i=0;i<N;i++) if(D.nodes[i].name===nm||D.nodes[i].cn===nm) return i; return -1; }
+
+  if(Q.start){ var si=idxByName(Q.start); if(si>=0){ S.start=si; setPickUI(); } }
+  if(Q.end){   var ei=idxByName(Q.end);   if(ei>=0){ S.end=ei;   setPickUI(); } }
+  if(Q.mode==='bfs'||Q.mode==='dijkstra'){
+    S.mode = Q.mode;
+    $$('#mode button').forEach(function(x){ x.classList.toggle('on', x.dataset.m===S.mode); });
+  }
+  if(S.start<0){ var a=idxByName('正大门');    if(a>=0) S.start=a; }
+  if(S.end<0){   var b=idxByName('白鹿会馆');  if(b>=0) S.end=b; }
+  setPickUI();
+
+  if(Q.tab){
+    var t = document.querySelector('.tab[data-tab="'+Q.tab+'"]');
+    if(t) t.click();
+  }
+  if(Q.run){ runAlgo(Q.run); }
+  else if(Q.route==='0'){
+    draw();
+  } else {
+    document.getElementById('go').click();
+  }
+  if(Q.zoom){ view.scale = Math.max(1.2, Math.min(90, parseFloat(Q.zoom)||view.scale)); draw(); }
+  if(Q.focus){ focusName(Q.focus); }
+})();
+
+window.__CAMPUS_APP = { S:S, algoDijkstra:algoDijkstra, algoBFS:algoBFS, algoDFS:algoDFS,
+  algoPrim:algoPrim, algoSort:algoSort, algoFloydPath:algoFloydPath,
+  idxOf:idxOf, D:D, adj:adj, draw:draw, fitView:fitView, focusName:focusName,
+  setSlot:setSlot, runAlgo:runAlgo, nameOf:nameOf };
+
+})();
+</script>
+</body>
+</html>

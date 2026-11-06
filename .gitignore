@@ -1,0 +1,42 @@
+# ---- 编译产物与历史备份（这个目录里有几十个 *.bak_roundN）----
+*.bak
+*.bak_*
+*.o
+*.obj
+
+# 可执行文件：只保留 campus.exe，其余历史版本全部排除
+*.exe
+!campus.exe
+
+# 发布包
+发布包_*.zip
+
+# 原始截图（bmp 单张 2.5MB，仓库只保留 png）
+screenshot_*.bmp
+
+# 课程材料与过程证据（含真实姓名与学校文档，不入库）
+答辩材料/
+证据_*/
+
+# 调试图（1.9MB 的中间校验图）
+osm_export/map_full_check.png
+
+# 编辑器 / 工具缓存
+.vscode/
+.workbuddy/
+__pycache__/
+
+# 系统垃圾
+Thumbs.db
+desktop.ini
+
+# 误建的空文件
+图文信息中心，总长
+
+# 课程文档（含团队姓名与学校模板，不入库）
+*.docx
+
+# 损坏的备份与冗余截图
+map.txt.broken_by_exp_*
+screenshot_*.png
+web/preview_*.png

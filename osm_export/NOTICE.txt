@@ -1,0 +1,7 @@
+本目录中的测绘数据（osm_campus.json / map_osm.txt / osm_buildings_*.csv / overlay.png 中的轮廓数据）
+来源于 OpenStreetMap，遵循 Open Database License (ODbL) 1.0。
+
+署名要求：© OpenStreetMap contributors（https://www.openstreetmap.org/copyright）
+若基于该数据发布衍生数据库，需以相同许可（ODbL）开放。
+
+取数时间：2026-09-25  取数方式：Overpass API（bbox 28.6735,116.0120 ~ 28.6895,116.0360）

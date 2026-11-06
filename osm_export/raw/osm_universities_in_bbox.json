@@ -1,0 +1,141 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-09-24T19:17:36Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "way",
+  "id": 227753192,
+  "center": {
+    "lat": 28.6931334,
+    "lon": 116.0256482
+  },
+  "tags": {
+    "amenity": "university",
+    "education": "university",
+    "name": "江西水利电力大学",
+    "name:en": "Jiangxi University of Water Resources and Electric Power",
+    "name:zh": "江西水利电力大学",
+    "website": "https://www.juwp.edu.cn/"
+  }
+},
+{
+  "type": "way",
+  "id": 227753265,
+  "center": {
+    "lat": 28.6821867,
+    "lon": 116.0261097
+  },
+  "tags": {
+    "addr:city": "南昌市",
+    "addr:country": "CN",
+    "addr:district": "南昌县",
+    "addr:housenumber": "99号",
+    "addr:province": "江西省",
+    "addr:street": "紫阳大道",
+    "amenity": "university",
+    "education": "university",
+    "internet_access": "wlan",
+    "internet_access:description": "IPv4需登录;IPv6免费使用",
+    "internet_access:ssid": "JXSFDX",
+    "isced:level": "6;7",
+    "name": "江西师范大学（瑶湖校区）",
+    "website": "https://www.jxnu.edu.cn/"
+  }
+},
+{
+  "type": "way",
+  "id": 227753730,
+  "center": {
+    "lat": 28.6846217,
+    "lon": 116.0134185
+  },
+  "tags": {
+    "addr:city": "南昌市",
+    "addr:postcode": "330000",
+    "addr:street": "高新区紫阳大道115号",
+    "amenity": "university",
+    "education": "university",
+    "internet_access": "yes",
+    "internet_access:fee": "customers",
+    "internet_access:ssid": "JXUT",
+    "name": "江西科技学院",
+    "name:en": "Jiangxi University of Technology",
+    "name:zh": "江西科技学院",
+    "note": "2017届学长留言：我毕业了，是时候交给你们学弟维护了，加油。",
+    "operator": "于果",
+    "operator:type": "university",
+    "phone": "+86 791 8813 8888",
+    "website": "https://www.jxut.edu.cn/",
+    "wheelchair": "yes"
+  }
+},
+{
+  "type": "way",
+  "id": 242308785,
+  "center": {
+    "lat": 28.7014336,
+    "lon": 116.0263078
+  },
+  "tags": {
+    "amenity": "university",
+    "education": "university",
+    "name": "江西外语外贸职业大学",
+    "website": "https://www.jxcfs.com/"
+  }
+},
+{
+  "type": "way",
+  "id": 530932834,
+  "center": {
+    "lat": 28.6893085,
+    "lon": 116.0210118
+  },
+  "tags": {
+    "amenity": "university",
+    "name": "电子信息楼"
+  }
+},
+{
+  "type": "way",
+  "id": 530932835,
+  "center": {
+    "lat": 28.6891563,
+    "lon": 116.0224698
+  },
+  "tags": {
+    "amenity": "university",
+    "name": "教学南大楼"
+  }
+},
+{
+  "type": "way",
+  "id": 530932837,
+  "center": {
+    "lat": 28.6914511,
+    "lon": 116.0226742
+  },
+  "tags": {
+    "amenity": "university",
+    "name": "教学北大楼"
+  }
+},
+{
+  "type": "way",
+  "id": 530932838,
+  "center": {
+    "lat": 28.6915367,
+    "lon": 116.0212390
+  },
+  "tags": {
+    "amenity": "university",
+    "name": "教育技术楼"
+  }
+}
+
+  ]
+}
