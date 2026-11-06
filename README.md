@@ -15,6 +15,7 @@
 ![网页版：三维地图](docs/screenshots/map.png)
 ![最少换乘（BFS）](docs/screenshots/transfer.png)
 ![Prim 最小生成树](docs/screenshots/algo.png)
+![网页版在手机宽度下的响应式布局](docs/screenshots/mobile.png)
 
 ---
 
@@ -124,7 +125,7 @@ libfreeglut.dll       freeglut 运行库
 map.txt               建筑数据
 road_data.txt         路网数据（节点 + 边）
 get_buildings.py      调高德 API 取建筑坐标、生成 map.txt 的脚本（Key 走环境变量）
-web/                  网页版（index.html + campus_data.js + 界面截图）
+web/                  网页版（index.html + campus_data.js）
 osm_export/           OSM 原始数据、比对报告与许可说明
 docs/screenshots/     README 用截图
 ```
