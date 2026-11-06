@@ -59,6 +59,24 @@ gcc main.c -o campus.exe -O2 -mwindows \
 | `map_bak1.txt` / `map_bak2.txt` | 备用地图（程序内可切换） |
 | `osm_export/` | 原始测绘数据与比对报告（见下方署名） |
 
+## 数据采集脚本
+
+`get_buildings.py` 用高德 Web 服务 API 批量取建筑经纬度，再换算成 3D 场景坐标。
+**Key 不写在代码里**，从环境变量读取：
+
+```bash
+# PowerShell
+$env:AMAP_KEY="你的Key"; python get_buildings.py
+
+# cmd
+set AMAP_KEY=你的Key && python get_buildings.py
+
+# bash
+AMAP_KEY=你的Key python get_buildings.py
+```
+
+没设置会直接退出并提示。脚本依赖 `requests`（`pip install requests`）。
+
 ## 测绘数据来源（重要）
 
 `osm_export/` 与地图文件中的建筑轮廓来自 **OpenStreetMap**，遵循

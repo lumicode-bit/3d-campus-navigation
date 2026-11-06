@@ -5,6 +5,8 @@
 使用高德地图API批量获取建筑经纬度，并转换为3D场景坐标
 """
 
+import os
+import sys
 import requests
 import json
 import time
@@ -15,8 +17,16 @@ import random
 # 配置区域（请修改）
 # ============================================================
 
-# 请在这里填入您的高德API Key
-AMAP_KEY = "YOUR_AMAP_KEY"  # 👈 替换成你的高德 Key
+# 高德 Web 服务 Key 从环境变量读取，**不要写死在这个文件里**（会被提交到仓库）。
+# 设置方式见 README 的「数据采集脚本」一节。
+AMAP_KEY = os.environ.get("AMAP_KEY", "").strip()
+
+if not AMAP_KEY:
+    print("未设置高德 Key：请先设置环境变量 AMAP_KEY，再运行本脚本。")
+    print("  PowerShell : $env:AMAP_KEY=\"你的Key\"; python get_buildings.py")
+    print("  cmd        : set AMAP_KEY=你的Key && python get_buildings.py")
+    print("  bash       : AMAP_KEY=你的Key python get_buildings.py")
+    sys.exit(1)
 
 # 校区中心基准点（正大坊的经纬度）
 # 如果不确定，运行脚本后查看输出，根据实际情况调整
