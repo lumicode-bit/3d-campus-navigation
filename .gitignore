@@ -43,3 +43,6 @@ web/preview_*.png
 
 # 基于旧基线的内部排查记录（数据与当前不符，不入库）
 问题对接清单_*.md
+
+# 采集脚本的运行时产物
+failed_buildings.txt
