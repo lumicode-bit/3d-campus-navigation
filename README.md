@@ -17,7 +17,7 @@
 | --- | --- |
 | **三维地图** | 建筑按真实轮廓多边形绘制，可鼠标旋转 / 缩放 / 平移；道路按等级分色 |
 | **最短路径** | Dijkstra，按步行距离计算，支持起终点任意选择，路径高亮 |
-| **最少换乘** | 在换乘代价建模上求解，用于"少走岔路、少拐弯"的路线推荐 |
+| **最少换乘** | BFS 分层搜索，按**跳数**求换乘次数最少的路线（与 Dijkstra 的"最短距离"互补） |
 | **最小生成树** | Prim，展示把全校路网连通的最小代价方案 |
 | **遍历演示** | 深度优先（DFS）/ 广度优先（BFS）逐步高亮访问顺序 |
 | **道路报告** | 手写快速排序按权重排序边，输出路网统计 |
@@ -100,7 +100,7 @@ campus.exe            预编译可执行文件（Windows x64）
 libfreeglut.dll       freeglut 运行库
 map.txt               建筑数据
 road_data.txt         路网数据（节点 + 边）
-get_buildings.py      从 OSM 导出数据生成 map.txt 的脚本
+get_buildings.py      调高德 API 取建筑坐标、生成 map.txt 的脚本（Key 走环境变量）
 web/                  网页版（index.html + campus_data.js + 界面截图）
 osm_export/           OSM 原始数据、比对报告与许可说明
 docs/screenshots/     README 用截图
